@@ -8,16 +8,15 @@ import { supabase } from '../lib/supabase';
 const busIcon3D = L.icon({
   iconUrl: 'https://cdn-icons-png.flaticon.com/512/3448/3448339.png', 
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-  iconSize: [45, 45],       
-  iconAnchor: [22, 45],     
-  popupAnchor: [0, -40],    
+  iconSize: [40, 40],       
+  iconAnchor: [20, 40],     
+  popupAnchor: [0, -35],    
 });
 
 function MapFocus({ target }) {
   const map = useMap();
   useEffect(() => {
-    // Corrected: Only focus if the bus is active and coordinates exist
-    if (target && target.is_active && target.lat && target.lng) {
+    if (target && target.lat && target.lng) {
       map.setView([target.lat, target.lng], 16);
     }
   }, [target, map]);
@@ -39,212 +38,167 @@ const StudentDash = () => {
     };
     fetchData();
 
-    // Corrected: Listening for real-time updates on all buses
     const channel = supabase.channel('bus-updates').on('postgres_changes', { 
       event: 'UPDATE', schema: 'public', table: 'buses' 
     }, (payload) => {
-      setBuses((prev) => {
-        const updatedBuses = prev.map(b => b.bus_number === payload.new.bus_number ? payload.new : b);
-        
-        // If the updated bus is the one currently selected, sync it immediately
-        if (selectedBus && selectedBus.bus_number === payload.new.bus_number) {
-            setSelectedBus(payload.new);
-        }
-        return updatedBuses;
-      });
+      setBuses((prev) => prev.map(b => b.bus_number === payload.new.bus_number ? payload.new : b));
     }).subscribe();
 
     return () => supabase.removeChannel(channel);
-  }, [selectedBus]); // Added selectedBus as dependency to keep tracking in sync
+  }, []);
 
   return (
-    <div className="dash-root" style={{ 
-      padding: '20px', 
-      fontFamily: 'Segoe UI, sans-serif', 
-      background: 'radial-gradient(circle at center, #0f172a 0%, #020617 100%)', 
-      minHeight: '100vh',
-      color: 'white',
-      overflowX: 'hidden'
-    }}>
-      
+    <div className="dash-root">
       <style>
         {`
-          @keyframes neonPulse {
-            0%, 100% { border-color: #22d3ee; box-shadow: 0 0 10px #22d3ee; }
-            50% { border-color: #818cf8; box-shadow: 0 0 25px #818cf8; }
+          /* PREVENT OVERFLOW CUTTING */
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          
+          .dash-root {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            overflow: hidden; /* Stops content from bleeding off edges */
           }
 
-          @keyframes slideUp {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+          /* COMPACT HEADER */
+          header {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(34, 211, 238, 0.2);
           }
 
-          /* LIQUID RIPPLE EFFECT FOR BUTTONS */
-          @keyframes rippleEffect {
-            0% { width: 0; height: 0; opacity: 0.5; }
-            100% { width: 500px; height: 500px; opacity: 0; }
-          }
-
-          .neon-card {
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid #22d3ee;
-            border-radius: 20px;
-            animation: neonPulse 4s infinite ease-in-out;
-          }
-
-          .move-btn-yellow {
-            position: relative;
-            overflow: hidden;
-            background: linear-gradient(135deg, #facc15 0%, #eab308 100%);
-            border: 2px solid #fef08a;
-            color: #000;
-            padding: 14px;
-            border-radius: 12px;
-            cursor: pointer;
+          /* HORIZONTAL BUBBLE SELECTOR (As per your sketch) */
+          .bubble-scroll-container {
             width: 100%;
-            text-align: left;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            margin-bottom: 12px;
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 15px 20px; /* Padding prevents button cutting at edges */
+            display: flex;
+            gap: 15px;
+            -webkit-overflow-scrolling: touch;
+          }
+          .bubble-scroll-container::-webkit-scrollbar { display: none; }
+
+          .bus-bubble {
+            display: inline-block;
+            padding: 10px 25px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(250, 204, 21, 0.4);
+            color: #facc15;
+            border-radius: 50px;
             font-weight: 800;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
             text-transform: uppercase;
             letter-spacing: 1px;
-            box-shadow: 0 4px 15px rgba(250, 204, 21, 0.3);
+            flex-shrink: 0;
           }
 
-          .move-btn-yellow::after {
-            content: "";
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            background: rgba(255, 255, 255, 0.4);
-            border-radius: 100%;
-            transform: translate(-50%, -50%);
+          .bus-bubble.active {
+            background: #facc15;
+            color: #000;
+            box-shadow: 0 0 20px #facc15;
+            border-color: #fff;
+            transform: scale(1.05);
           }
 
-          .move-btn-yellow:active::after {
-            animation: rippleEffect 0.6s ease-out;
+          /* MIDDLE MAP SECTION */
+          .map-box {
+            flex: 1; /* Takes remaining middle space */
+            margin: 0 15px;
+            border-radius: 25px;
+            overflow: hidden;
+            border: 1px solid rgba(34, 211, 238, 0.3);
+            position: relative;
           }
 
-          .move-btn-yellow:hover {
-            transform: translateX(12px) scale(1.02);
-            background: #fff;
-            box-shadow: 0 0 30px #facc15, -10px 0 20px #eab308;
+          /* BOTTOM LIVE FEED */
+          .live-feed-panel {
+            height: 25vh;
+            padding: 20px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.2);
           }
 
-          .move-btn-yellow.selected {
-             background: #ffffff;
-             border-color: #fff;
-             box-shadow: 0 0 40px #facc15;
-             transform: translateX(15px);
+          .feed-item {
+            padding: 12px;
+            background: rgba(250, 204, 21, 0.05);
+            border-left: 4px solid #facc15;
+            border-radius: 8px;
+            margin-bottom: 10px;
           }
 
-          .notice-item {
-            animation: slideUp 0.5s ease-out forwards;
-          }
-
-          ::-webkit-scrollbar { width: 6px; }
-          ::-webkit-scrollbar-thumb { background: #facc15; border-radius: 10px; }
-
-          /* MOBILE RESPONSIVE ADAPTATION */
-          @media (max-width: 900px) {
-            .dash-root { padding: 10px !important; overflow-y: auto !important; overflow-x: hidden !important; }
-            header { padding: 10px 20px !important; margin-bottom: 10px !important; flex-direction: column; text-align: center; gap: 10px; }
-            h1 { font-size: 1.4rem !important; }
-            
-            .main-layout-grid { 
-              display: flex !important; 
-              flex-direction: column !important; 
-              height: auto !important; 
-              gap: 15px !important;
-            }
-
-            .neon-card { width: 100% !important; height: auto !important; min-height: 200px; max-height: 500px; }
-            .leaflet-container { height: 400px !important; border-radius: 15px !important; }
-            
-            /* Make buttons easier to tap on mobile */
-            .move-btn-yellow { padding: 18px !important; margin-bottom: 10px !important; }
-            .move-btn-yellow:hover { transform: scale(1.01); }
+          @media (max-width: 480px) {
+            header h1 { font-size: 1.3rem !important; }
+            .bus-bubble { padding: 8px 20px; }
           }
         `}
       </style>
 
-      <header className="neon-card" style={{ display: 'flex', justifyContent: 'space-between', padding: '15px 30px', marginBottom: '20px' }}>
+      <header>
         <div>
-          <h1 style={{ margin: 0, fontSize: '1.8rem', letterSpacing: '4px', textShadow: '0 0 10px #22d3ee' }}>SVIT DASH</h1>
-          <small style={{ color: '#818cf8', letterSpacing: '2px' }}>CONNECTED TO SVIT-FLEET-CORE</small>
+          <h1 style={{ letterSpacing: '3px', textShadow: '0 0 10px #22d3ee' }}>SVIT DASH</h1>
+          <small style={{ color: '#818cf8', letterSpacing: '1px' }}>SYSTEM ONLINE</small>
         </div>
         <button 
           onClick={() => { sessionStorage.clear(); navigate('/'); }}
-          style={{ background: 'transparent', border: '1px solid #ef4444', color: '#ef4444', padding: '10px 25px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s' }}
-          onMouseOver={(e) => e.target.style.background = '#ef4444' + '22'}
-          onMouseOut={(e) => e.target.style.background = 'transparent'}
+          style={{ background: 'transparent', border: '1px solid #ef4444', color: '#ef4444', padding: '6px 15px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold' }}
         >
           LOGOUT
         </button>
       </header>
 
-      <div className="main-layout-grid" style={{ display: 'grid', gridTemplateColumns: '300px 1fr 320px', gap: '20px', height: '78vh' }}>
-        
-        <div className="neon-card" style={{ padding: '20px', overflowY: 'auto' }}>
-          <h3 style={{ color: '#facc15', textShadow: '0 0 10px rgba(250, 204, 21, 0.5)', marginBottom: '20px', letterSpacing: '2px' }}>SELECT BUS</h3>
-          {buses.map((bus) => (
-            <button 
-              key={bus.id} 
-              className={`move-btn-yellow ${selectedBus?.id === bus.id ? 'selected' : ''}`}
-              onClick={() => setSelectedBus(bus)}
-            >
-              <strong>BUS {bus.bus_number}</strong>
-              <div style={{ fontSize: '10px', fontWeight: '600', marginTop: '4px' }}>
-                {bus.is_active ? "● SIGNAL STRENGTH: HIGH" : "○ CONNECTION LOST"}
-              </div>
-            </button>
+      {/* HORIZONTAL BUBBLE ROW */}
+      <div className="bubble-scroll-container">
+        <div 
+          className={`bus-bubble ${!selectedBus ? 'active' : ''}`} 
+          onClick={() => setSelectedBus(null)}
+        >
+          📍 ALL BUSES
+        </div>
+        {buses.map((bus) => (
+          <div 
+            key={bus.id} 
+            className={`bus-bubble ${selectedBus?.bus_number === bus.bus_number ? 'active' : ''}`}
+            onClick={() => setSelectedBus(bus)}
+          >
+            BUS NO: {bus.bus_number}
+          </div>
+        ))}
+      </div>
+
+      {/* MAP CENTERED IN THE MIDDLE */}
+      <div className="map-box">
+        <MapContainer center={[15.8281, 78.0373]} zoom={13} style={{ height: '100%', width: '100%' }} zoomControl={false}>
+          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          {buses.map(bus => (
+            bus.lat !== 0 && (
+              <Marker key={bus.id} position={[bus.lat, bus.lng]} icon={busIcon3D}>
+                <Popup><strong>SVIT BUS {bus.bus_number}</strong></Popup>
+              </Marker>
+            )
           ))}
-        </div>
+          {selectedBus && <MapFocus target={selectedBus} />}
+        </MapContainer>
+      </div>
 
-        <div className="neon-card" style={{ overflow: 'hidden', padding: '5px' }}>
-          <MapContainer center={[15.8281, 78.0373]} zoom={13} style={{ height: '100%', width: '100%', borderRadius: '15px' }}>
-            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-            {buses.map(bus => (
-              // Corrected: Only show markers for buses that are active and have coordinates
-              bus.is_active && bus.lat !== 0 && (
-                <Marker key={bus.id} position={[bus.lat, bus.lng]} icon={busIcon3D}>
-                  <Popup>
-                    <div style={{ color: '#000' }}>
-                      <strong>SVIT BUS {bus.bus_number}</strong>
-                      <p style={{ margin: '5px 0 0' }}>Status: Live Tracking</p>
-                    </div>
-                  </Popup>
-                </Marker>
-              )
-            ))}
-            {selectedBus && <MapFocus target={selectedBus} />}
-          </MapContainer>
-        </div>
-
-        <div className="neon-card" style={{ padding: '20px', overflowY: 'auto' }}>
-          <h3 style={{ color: '#facc15', textShadow: '0 0 5px #facc15', marginBottom: '20px' }}>SVIT LIVE FEED</h3>
-          {announcements.map((ann, index) => (
-            <div 
-              key={ann.id} 
-              className="notice-item" 
-              style={{ 
-                animationDelay: `${index * 0.1}s`,
-                marginBottom: '15px', 
-                padding: '15px', 
-                background: 'rgba(250, 204, 21, 0.05)', 
-                borderRadius: '12px', 
-                borderLeft: '4px solid #facc15' 
-              }}
-            >
-              <strong style={{ color: '#facc15' }}>{ann.title}</strong>
-              <p style={{ fontSize: '13px', margin: '5px 0', opacity: 0.8 }}>{ann.content}</p>
-              <small style={{ fontSize: '10px', opacity: 0.5 }}>{new Date(ann.created_at).toLocaleTimeString()}</small>
-            </div>
-          ))}
-        </div>
-
+      {/* LIVE FEED AT THE BOTTOM */}
+      <div className="live-feed-panel">
+        <h3 style={{ color: '#facc15', fontSize: '14px', marginBottom: '15px', letterSpacing: '2px' }}>SVIT LIVE FEED</h3>
+        {announcements.map((ann) => (
+          <div key={ann.id} className="feed-item">
+            <strong style={{ color: '#facc15', fontSize: '13px' }}>{ann.title}</strong>
+            <p style={{ fontSize: '12px', opacity: 0.8, marginTop: '4px' }}>{ann.content}</p>
+          </div>
+        ))}
       </div>
     </div>
   );

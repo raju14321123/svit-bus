@@ -42,23 +42,20 @@ const DriverDash = () => {
     let watchId;
 
     const sendToDatabase = async (lat, lng) => {
-      const { data, error } = await supabase
-        .from('buses')
-        .update({ 
-          lat: lat, 
-          lng: lng, 
-          is_active: true,
-          last_updated: new Date().toISOString() 
-        })
-        .eq('bus_number', busNumber)
-        .select();
+  if (lat === 0 || lng === 0) {
+    console.warn("Phone is sending 0,0 - Waiting for better GPS signal...");
+    return;
+  }
 
-      if (error) {
-        console.error("SQL Error:", error.message);
-      } else if (data.length === 0) {
-        console.error("Bus Number not found in database. Check Admin Dash.");
-      }
-    };
+  const { data, error } = await supabase
+    .from('buses')
+    .update({ lat, lng, is_active: true, last_updated: new Date().toISOString() })
+    .eq('bus_number', busNumber)
+    .select();
+
+  if (error) alert("Database Error: " + error.message);
+  if (data && data.length === 0) alert("Bus Number not found in SQL table!");
+};
 
     if (isSharing && busNumber) {
       if (watchId) navigator.geolocation.clearWatch(watchId);

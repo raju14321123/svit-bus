@@ -26,9 +26,16 @@ const AdminDash = () => {
   const [content, setContent] = useState('');
   const [announcements, setAnnouncements] = useState([]);
 
+  // User List and Search States
+  const [students, setStudents] = useState([]);
+  const [drivers, setDrivers] = useState([]);
+  const [showList, setShowList] = useState(false);
+  const [searchTerm, setSearchTerm] = useState(''); // New state for search
+
   useEffect(() => {
     if (isAdmin) {
       fetchAnnouncements();
+      fetchUsers();
       runAutoCleanup();
     }
   }, [isAdmin]);
@@ -42,6 +49,23 @@ const AdminDash = () => {
     const { data } = await supabase.from('announcements').select('*').order('created_at', { ascending: false });
     setAnnouncements(data || []);
   };
+
+  const fetchUsers = async () => {
+    const { data: sData } = await supabase.from('student_users').select('*');
+    const { data: dData } = await supabase.from('driver_users').select('*');
+    setStudents(sData || []);
+    setDrivers(dData || []);
+  };
+
+  // Logic to filter users based on the search term
+  const filteredStudents = students.filter(s => 
+    s.student_id.toString().toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
+  const filteredDrivers = drivers.filter(d => 
+    d.driver_id.toString().toLowerCase().includes(searchTerm.toLowerCase()) || 
+    d.assigned_bus?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleAdminLogin = async (e) => {
     e.preventDefault();
@@ -70,6 +94,7 @@ const AdminDash = () => {
     e.preventDefault();
     await supabase.from('student_users').insert([{ student_id: studentPin, password: studentPass }]);
     alert("Student Registered!"); setStudentPin(''); setStudentPass('');
+    fetchUsers();
   };
 
   const addDriver = async (e) => {
@@ -79,7 +104,18 @@ const AdminDash = () => {
     ]);
     if (!error) {
       alert("Driver Registered!"); setDriverId(''); setDriverPass(''); setAssignedBus('');
+      fetchUsers();
     } else { alert("Error: " + error.message); }
+  };
+
+  const deleteUser = async (id, table, idCol) => {
+    if (window.confirm(`Permanently WIPE ID: ${id} from database?`)) {
+      const { error } = await supabase.from(table).delete().eq(idCol, id);
+      if (!error) {
+        alert("User deleted successfully.");
+        fetchUsers();
+      } else { alert("Error: " + error.message); }
+    }
   };
 
   const postAnnouncement = async () => {
@@ -89,7 +125,7 @@ const AdminDash = () => {
 
   const deleteManual = async (id) => {
     if (window.confirm("Delete this notice?")) {
-      const { error } = await supabase.from('announcements').delete().eq('id', id);
+      const { error } = await supabase.from('announcements').delete().eq(id);
       if (!error) fetchAnnouncements();
     }
   };
@@ -104,154 +140,218 @@ const AdminDash = () => {
 
   if (!isAdmin) {
     return (
-      <div style={{ 
-        height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', 
-        background: 'radial-gradient(circle at center, #2a0808 0%, #020617 100%)',
-        fontFamily: 'Segoe UI, sans-serif', overflow: 'hidden'
-      }}>
+      <div className="login-wrapper">
         <style>{`
-          @keyframes flyIn { from { transform: scale(0.5); opacity: 0; filter: blur(10px); } to { transform: scale(1); opacity: 1; filter: blur(0); } }
+          .login-wrapper {
+            height: 100vh; display: flex; align-items: center; justify-content: center; 
+            background: radial-gradient(circle at center, #020617 0%, #000 100%);
+            font-family: 'Segoe UI', sans-serif; overflow: hidden;
+          }
+          @keyframes flyIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
           .admin-card { 
-            background: rgba(255, 255, 255, 0.05); 
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 50px; border-radius: 28px; text-align: center; width: 360px; 
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            animation: flyIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
+            background: rgba(10, 10, 20, 0.6); 
+            backdrop-filter: blur(20px);
+            border: 2px solid #00f2ff;
+            padding: 40px; border-radius: 30px; text-align: center; width: 380px; 
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.2);
+            animation: flyIn 0.8s ease-out forwards; 
           }
-          /* MOBILE LOGIN FIX */
-          @media (max-width: 480px) {
-            .admin-card { width: 90%; padding: 30px 20px; }
-            h1 { font-size: 2.5rem !important; }
+          @media (max-width: 480px) { .admin-card { width: 90%; } }
+          .droplet-btn-red { 
+            background: transparent; border: 2px solid #00f2ff; color: #00f2ff; 
+            padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; 
+            transition: 0.3s; text-transform: uppercase; letter-spacing: 2px;
           }
-          .droplet-btn-red { position: relative; overflow: hidden; background: transparent; border: 2px solid #ef4444; color: #ef4444; padding: 18px; border-radius: 12px; font-weight: 900; cursor: pointer; width: 100%; margin-top: 10px; }
-          @keyframes busEnter { from { transform: translateX(-150%); } to { transform: translateX(0%); } }
-          .bus-anim { animation: busEnter 0.5s forwards; font-size: 2rem; display: block; }
-          .neon-input-red { width: 100%; padding: 15px; margin-bottom: 15px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); color: white; border-radius: 10px; text-align: center; outline: none; }
+          .droplet-btn-red:hover { background: #00f2ff; color: black; box-shadow: 0 0 20px #00f2ff; }
+          .neon-input-red { 
+            width: 100%; padding: 15px; margin-bottom: 20px; background: rgba(255, 255, 255, 0.05); 
+            border: 1px solid rgba(0, 242, 255, 0.3); color: white; border-radius: 12px; text-align: center; 
+          }
         `}</style>
         <div className="admin-card">
-          <h1 style={{ color: '#fff', letterSpacing: '8px', textShadow: '0 0 15px #ef4444' }}>SVIT</h1>
-          <p style={{ color: '#ef4444', fontSize: '0.8rem', marginBottom: '30px' }}>ADMIN CENTRAL</p>
-          <form onSubmit={handleAdminLogin}>
-            <input type="password" placeholder="SECURE ADMIN KEY" className="neon-input-red" value={adminPasswordInput} onChange={(e) => setAdminPasswordInput(e.target.value)} required />
-            <button type="submit" className="droplet-btn-red">{isLoggingIn ? <span className="bus-anim">🚌</span> : "AUTHORIZE"}</button>
-          </form>
-          <p onClick={() => navigate('/admin-reset')} style={{ color: 'rgba(255,255,255,0.4)', cursor: 'pointer', marginTop: '20px', fontSize: '12px', textDecoration: 'underline' }}>Forgot Admin Password?</p>
+          <h1 style={{ color: '#fff', fontSize: '3rem', margin: 0, textShadow: '0 0 20px #00f2ff' }}>SVIT</h1>
+          <p style={{ color: '#00f2ff', fontSize: '0.9rem', marginBottom: '30px', letterSpacing: '3px' }}>BUS TRACKING SYSTEM</p>
+          <div style={{ border: '1px solid rgba(0,242,255,0.3)', padding: '30px', borderRadius: '20px' }}>
+            <p style={{ color: '#ccc', marginBottom: '20px' }}>SELECT PORTAL</p>
+            <form onSubmit={handleAdminLogin}>
+              <input type="password" placeholder="ADMIN ACCESS KEY" className="neon-input-red" value={adminPasswordInput} onChange={(e) => setAdminPasswordInput(e.target.value)} required />
+              <button type="submit" className="droplet-btn-red">{isLoggingIn ? "SYNCING..." : "AUTHORIZE"}</button>
+            </form>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ 
-      padding: '30px', 
-      background: 'radial-gradient(circle at center, #062006 0%, #020617 100%)', 
-      minHeight: '100vh', color: 'white', fontFamily: 'Segoe UI, sans-serif' 
-    }}>
+    <div className="admin-dashboard-root">
        <style>{`
-          @keyframes cinematicIn { 0% { transform: scale(0.9); opacity: 0; filter: blur(10px); } 100% { transform: scale(1); opacity: 1; filter: blur(0); } }
-          .panel-entrance { animation: cinematicIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+          .admin-dashboard-root {
+            padding: 20px; 
+            background: #020617; 
+            minHeight: 100vh; color: white; font-family: 'Segoe UI', sans-serif;
+          }
+          .admin-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+          }
+          @media (max-width: 850px) {
+            .admin-grid { grid-template-columns: 1fr; }
+            .neon-text-green { font-size: 1.2rem !important; }
+          }
           
-          /* WATER GLASS EFFECT (iOS 18 STYLE) */
           .water-glass {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(25px) saturate(200%);
-            -webkit-backdrop-filter: blur(25px) saturate(200%);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 24px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(57, 255, 20, 0.2);
+            border-radius: 20px;
             padding: 25px;
-            box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.05), 0 15px 35px rgba(0, 0, 0, 0.4);
-            margin-bottom: 20px;
-            transition: 0.3s;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
           }
           
-          .water-glass:hover {
-            border-color: rgba(57, 255, 20, 0.5);
-            background: rgba(255, 255, 255, 0.05);
-          }
+          .neon-text-green { color: #39FF14; text-shadow: 0 0 10px rgba(57, 255, 20, 0.5); font-size: 1.5rem; margin-bottom: 20px; }
+          .neon-text-yellow { color: #facc15; text-shadow: 0 0 10px rgba(250, 204, 21, 0.5); font-size: 1.5rem; margin-bottom: 20px; }
 
-          .neon-text-green { text-shadow: 0 0 10px #39FF14; color: #39FF14; }
-          .action-btn-green { background: rgba(57, 255, 20, 0.1); border: 1px solid #39FF14; color: #39FF14; padding: 10px 15px; border-radius: 12px; cursor: pointer; transition: 0.3s; margin-top: 10px; font-weight: bold; }
-          .action-btn-green:hover { background: #39FF14; color: #020617; box-shadow: 0 0 20px #39FF14; }
-          .neon-input-dash { padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 10px; width: 100%; margin-bottom: 12px; outline: none; }
-          .neon-input-dash:focus { border-color: #39FF14; }
-
-          /* MOBILE RESPONSIVE FIX */
-          @media (max-width: 768px) {
-            body { overflow-x: hidden; }
-            div[style*="padding: 30px"] { padding: 15px !important; }
-            header { flex-direction: column; gap: 15px; text-align: center; }
-            h1 { font-size: 1.5rem !important; }
-            div[style*="gridTemplateColumns: 1.2fr 1fr"] { 
-              grid-template-columns: 1fr !important; 
-              gap: 10px !important; 
-            }
-            .water-glass { padding: 20px 15px; }
+          .action-btn-green { 
+            background: transparent; border: 1px solid #39FF14; color: #39FF14; 
+            padding: 12px 20px; border-radius: 10px; cursor: pointer; transition: 0.3s;
+            font-weight: bold; width: fit-content; margin-top: 5px;
           }
+          .action-btn-green:hover { background: #39FF14; color: black; box-shadow: 0 0 15px #39FF14; }
+
+          .action-btn-yellow { 
+            background: transparent; border: 1px solid #facc15; color: #facc15; 
+            padding: 12px 20px; border-radius: 10px; cursor: pointer; transition: 0.3s;
+            font-weight: bold; width: 100%; margin-top: 15px;
+          }
+          .action-btn-yellow:hover { background: #facc15; color: black; box-shadow: 0 0 15px #facc15; }
+
+          .neon-input-dash { 
+            padding: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); 
+            color: white; border-radius: 10px; width: 100%; margin-bottom: 15px; outline: none;
+          }
+          .neon-input-dash:focus { border-color: #39FF14; background: rgba(57, 255, 20, 0.05); }
+
+          .gen-pill { 
+            background: rgba(52, 152, 219, 0.2); color: #3498db; border: 1px dashed #3498db;
+            padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; margin-bottom: 5px; display: inline-block;
+          }
+          hr { border: 0; border-top: 1px solid rgba(255,255,255,0.05); margin: 25px 0; }
        `}</style>
 
-       <header className="panel-entrance" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-          <h1 className="neon-text-green" style={{ letterSpacing: '5px' }}>SVIT COMMAND CENTER</h1>
-          <button onClick={() => setIsAdmin(false)} className="action-btn-green" style={{borderColor: '#ef4444', color: '#ef4444'}}>TERMINATE</button>
+       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', padding: '0 10px' }}>
+          <button onClick={() => setIsAdmin(false)} style={{ background: 'transparent', color: '#ef4444', border: '1px solid #ef4444', padding: '8px 15px', borderRadius: '8px', cursor: 'pointer' }}>TERMINATE</button>
        </header>
 
-       <div className="panel-entrance" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '30px' }}>
+       <div className="admin-grid">
           
-          <div>
+          <div className="left-panel">
             <div className="water-glass">
                <h3 className="neon-text-green">Management Suite</h3>
-               <input placeholder="Bus Number" value={busNumber} onChange={e => setBusNumber(e.target.value)} className="neon-input-dash" />
-               <button onClick={addBus} className="action-btn-green">Add Bus</button>
-               <hr style={{ opacity: 0.1, margin: '20px 0' }} />
                
-               <h4>Enrolment</h4>
+               <div style={{ marginBottom: '20px' }}>
+                 <input placeholder="Bus Number" value={busNumber} onChange={e => setBusNumber(e.target.value)} className="neon-input-dash" />
+                 <button onClick={addBus} className="action-btn-green">Add Bus</button>
+               </div>
+
+               <hr />
+               
+               <h4 style={{ marginBottom: '15px', color: '#ccc' }}>Enrolment</h4>
                <input placeholder="Student PIN" value={studentPin} onChange={e => setStudentPin(e.target.value)} className="neon-input-dash" />
-               <input placeholder="Password" value={studentPass} onChange={e => setStudentPass(e.target.value)} className="neon-input-dash" />
-               <button onClick={() => generatePass('student')} style={{ background: '#3498db', border: 'none', color: 'white', padding: '5px 12px', borderRadius: '6px', cursor: 'pointer' }}>Generate</button>
-               <button onClick={addStudent} className="action-btn-green" style={{ marginLeft: '10px' }}>Enroll Student</button>
+               <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <input placeholder="Password" value={studentPass} onChange={e => setStudentPass(e.target.value)} className="neon-input-dash" style={{ marginBottom: 0 }} />
+                  <span className="gen-pill" onClick={() => generatePass('student')}>Generate</span>
+               </div>
+               <button onClick={addStudent} className="action-btn-green" style={{ marginTop: '15px' }}>Enroll Student</button>
                
-               <hr style={{ opacity: 0.1, margin: '20px 0' }} />
+               <hr />
                
-               <h4>Driver Gateway</h4>
+               <h4 style={{ marginBottom: '15px', color: '#ccc' }}>Driver Gateway</h4>
                <input placeholder="Driver ID" value={driverId} onChange={e => setDriverId(e.target.value)} className="neon-input-dash" />
-               <input placeholder="Password" value={driverPass} onChange={e => setDriverPass(e.target.value)} className="neon-input-dash" />
-               <button onClick={() => generatePass('driver')} style={{ background: '#3498db', border: 'none', color: 'white', padding: '5px 12px', borderRadius: '6px', cursor: 'pointer' }}>Generate</button>
-               <input placeholder="Assigned Bus" value={assignedBus} onChange={e => setAssignedBus(e.target.value)} className="neon-input-dash" style={{ marginTop: '12px' }} />
+               <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '15px' }}>
+                  <input placeholder="Password" value={driverPass} onChange={e => setDriverPass(e.target.value)} className="neon-input-dash" style={{ marginBottom: 0 }} />
+                  <span className="gen-pill" onClick={() => generatePass('driver')}>Generate</span>
+               </div>
+               <input placeholder="Assigned Bus" value={assignedBus} onChange={e => setAssignedBus(e.target.value)} className="neon-input-dash" />
                <button onClick={addDriver} className="action-btn-green">Set Driver</button>
+
+               <hr />
+               <button 
+                  onClick={() => setShowList(!showList)} 
+                  className="action-btn-green" 
+                  style={{ width: '100%', borderColor: '#00f2ff', color: '#00f2ff' }}
+               >
+                 {showList ? "HIDE REGISTERED LIST" : "SHOW REGISTERED LIST"}
+               </button>
             </div>
 
+            {showList && (
+              <div className="water-glass" style={{ marginTop: '20px', maxHeight: '500px', overflowY: 'auto', border: '1px solid #00f2ff' }}>
+                 {/* SEARCH BAR COMPONENT */}
+                 <input 
+                   placeholder="🔍 Quick Search ID..." 
+                   value={searchTerm} 
+                   onChange={(e) => setSearchTerm(e.target.value)} 
+                   className="neon-input-dash" 
+                   style={{ borderColor: '#00f2ff', marginBottom: '20px' }}
+                 />
+
+                 <h4 className="neon-text-green" style={{ fontSize: '1rem', color: '#00f2ff' }}>Filtered Students</h4>
+                 {filteredStudents.length === 0 && <p style={{opacity: 0.4, fontSize: '0.8rem'}}>No matching students found.</p>}
+                 {filteredStudents.map(s => (
+                   <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                     <span style={{ fontSize: '0.9rem' }}>ID: {s.student_id}</span>
+                     <button onClick={() => deleteUser(s.student_id, 'student_users', 'student_id')} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}>DELETE</button>
+                   </div>
+                 ))}
+                 
+                 <h4 className="neon-text-green" style={{ fontSize: '1rem', color: '#00f2ff', marginTop: '20px' }}>Filtered Drivers</h4>
+                 {filteredDrivers.length === 0 && <p style={{opacity: 0.4, fontSize: '0.8rem'}}>No matching drivers found.</p>}
+                 {filteredDrivers.map(d => (
+                   <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                     <span style={{ fontSize: '0.9rem' }}>ID: {d.driver_id} (Bus: {d.assigned_bus})</span>
+                     <button onClick={() => deleteUser(d.driver_id, 'driver_users', 'driver_id')} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}>DELETE</button>
+                   </div>
+                 ))}
+              </div>
+            )}
+          </div>
+
+          <div className="right-panel">
             <div className="water-glass">
-               <h3 style={{ color: '#f39c12' }}>Emergency Reset</h3>
-               <select value={userType} onChange={e => setUserType(e.target.value)} style={{ padding: '10px', background: '#111', color: 'white', width: '100%', borderRadius: '8px', marginBottom: '12px' }}>
+               <h3 className="neon-text-yellow">Intelligence Hub</h3>
+               <input placeholder="Notice Title" value={title} onChange={e => setTitle(e.target.value)} className="neon-input-dash" />
+               <textarea placeholder="Broadcast details..." value={content} onChange={e => setContent(e.target.value)} className="neon-input-dash" style={{ height: '120px', resize: 'none' }} />
+               <button onClick={postAnnouncement} className="action-btn-yellow">RELEASE INTEL</button>
+               
+               <div style={{ marginTop: '30px' }}>
+                  <h4 style={{ color: '#39FF14', marginBottom: '15px' }}>Active Broadcasts</h4>
+                  {announcements.length === 0 && <p style={{ opacity: 0.4, fontSize: '0.8rem' }}>No active notices...</p>}
+                  {announcements.map(ann => (
+                    <div key={ann.id} style={{ padding: '15px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', marginBottom: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                          <strong style={{ color: '#facc15' }}>{ann.title}</strong>
+                          <p style={{ fontSize: '13px', opacity: 0.8, marginTop: '5px' }}>{ann.content}</p>
+                        </div>
+                        <button onClick={() => deleteManual(ann.id)} style={{ background: 'transparent', color: '#ef4444', border: 'none', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 'bold' }}>WIPE</button>
+                      </div>
+                    </div>
+                  ))}
+               </div>
+            </div>
+
+            <div className="water-glass" style={{ marginTop: '20px', border: '1px solid rgba(243, 156, 18, 0.2)' }}>
+               <h3 style={{ color: '#f39c12', fontSize: '1.2rem', marginBottom: '15px' }}>Emergency Reset</h3>
+               <select value={userType} onChange={e => setUserType(e.target.value)} style={{ padding: '12px', background: '#0f172a', color: 'white', width: '100%', borderRadius: '10px', marginBottom: '15px', border: '1px solid rgba(255,255,255,0.1)' }}>
                   <option value="student">Student Account</option>
                   <option value="driver">Driver Account</option>
                </select>
                <input placeholder="Target ID" value={searchId} onChange={e => setSearchId(e.target.value)} className="neon-input-dash" />
-               <input placeholder="New Credentials" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="neon-input-dash" />
+               <input placeholder="New Password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="neon-input-dash" />
                <button onClick={handleResetPassword} className="action-btn-green" style={{ borderColor: '#f39c12', color: '#f39c12' }}>Apply Patch</button>
-            </div>
-          </div>
-
-          <div>
-            <div className="water-glass">
-               <h3 style={{ color: '#facc15' }}>Intelligence Hub</h3>
-               <input placeholder="Notice Title" value={title} onChange={e => setTitle(e.target.value)} className="neon-input-dash" />
-               <textarea placeholder="Broadcast details..." value={content} onChange={e => setContent(e.target.value)} className="neon-input-dash" style={{ height: '100px' }} />
-               <button onClick={postAnnouncement} className="action-btn-green" style={{ borderColor: '#facc15', color: '#facc15', width: '100%' }}>RELEASE INTEL</button>
-               
-               <div style={{ marginTop: '30px' }}>
-                  <h4 className="neon-text-green">Active Broadcasts</h4>
-                  {announcements.map(ann => (
-                    <div key={ann.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '15px 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                      <div style={{ maxWidth: '70%' }}>
-                        <strong style={{ color: '#facc15' }}>{ann.title}</strong>
-                        <p style={{ fontSize: '12px', opacity: 0.8, margin: '5px 0' }}>{ann.content}</p>
-                      </div>
-                      <button onClick={() => deleteManual(ann.id)} className="action-btn-green" style={{ fontSize: '10px', marginTop: '0', borderColor: '#ef4444', color: '#ef4444' }}>WIPE</button>
-                    </div>
-                  ))}
-               </div>
             </div>
           </div>
 
