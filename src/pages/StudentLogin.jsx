@@ -34,20 +34,36 @@ const StudentLogin = () => {
   };
 
   return (
-    <div style={{ 
-      height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', 
-      background: 'radial-gradient(circle at center, #1e1b4b 0%, #020617 100%)',
-      fontFamily: 'Segoe UI, sans-serif', overflow: 'hidden', position: 'relative' 
-    }}>
+    <div className="page-wrapper">
       
       <style>
         {`
+          /* PREVENT RIGHT-SIDE DRIFT AND OVERFLOW */
+          * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+          }
+
+          .page-wrapper {
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, #1e1b4b 0%, #020617 100%);
+            font-family: 'Segoe UI', sans-serif;
+            overflow: hidden;
+            position: relative;
+            padding: 20px; /* Padding for mobile safety */
+          }
+
           /* HARDWARE ACCELERATION FIX */
           .login-card-base, .bus-anim, .droplet-btn {
             backface-visibility: hidden;
             perspective: 1000px;
             will-change: transform, opacity, filter;
-            transform: translateZ(0); /* Forces GPU rendering */
+            transform: translateZ(0);
           }
 
           @keyframes flyIn {
@@ -62,14 +78,16 @@ const StudentLogin = () => {
 
           .login-card-base {
             background: rgba(15, 23, 42, 0.7);
-            padding: 50px;
+            padding: 40px;
             border-radius: 24px;
             border: 2px solid #22d3ee;
             text-align: center;
-            width: 360px;
+            width: 100%;
+            max-width: 360px; /* Limits desktop width, allows mobile scaling */
             backdrop-filter: blur(12px);
             box-shadow: 0 0 20px rgba(34, 211, 238, 0.4);
             animation: flyIn 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            margin: auto;
           }
 
           .transport-active {
@@ -82,7 +100,7 @@ const StudentLogin = () => {
             background: transparent;
             border: 2px solid #22d3ee;
             color: white;
-            padding: 18px;
+            padding: 16px;
             border-radius: 12px;
             font-weight: bold;
             cursor: pointer;
@@ -92,6 +110,7 @@ const StudentLogin = () => {
             letter-spacing: 2px;
             width: 100%;
             margin-top: 10px;
+            display: block;
           }
 
           .droplet-btn:active::after {
@@ -117,24 +136,30 @@ const StudentLogin = () => {
           .bus-anim { animation: busEnter 0.5s forwards; font-size: 2rem; display: block; }
 
           .neon-input {
-            width: 100%; padding: 15px; margin-bottom: 15px;
+            width: 100%; 
+            padding: 15px; 
+            margin-bottom: 15px;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(34, 211, 238, 0.3);
-            color: white; border-radius: 10px;
-            text-align: center; outline: none; transition: 0.3s;
+            color: white; 
+            border-radius: 10px;
+            text-align: center; 
+            outline: none; 
+            transition: 0.3s;
+            display: block;
           }
           .neon-input:focus { border-color: #22d3ee; box-shadow: 0 0 15px #22d3ee; }
 
-          /* MOBILE RESPONSIVE FIX */
+          /* MOBILE RESPONSIVE TWEAKS */
           @media (max-width: 480px) {
             .login-card-base {
-              width: 90% !important; /* Adjusts width to phone screen */
-              padding: 40px 20px !important; /* Reduces padding for smaller screens */
+              width: 100%;
+              padding: 40px 20px;
             }
-            h1 { font-size: 2.5rem !important; }
+            h1 { font-size: 2.2rem !important; }
             .neon-input, .droplet-btn {
-              padding: 12px !important;
-              font-size: 0.9rem !important;
+              padding: 14px !important;
+              font-size: 0.85rem !important;
             }
           }
         `}
@@ -144,7 +169,7 @@ const StudentLogin = () => {
         <h1 style={{ color: '#fff', letterSpacing: '8px', textShadow: '0 0 15px #22d3ee', margin: '0' }}>SVIT</h1>
         <p style={{ color: '#818cf8', fontSize: '0.8rem', marginBottom: '30px', letterSpacing: '2px' }}>STUDENT PORTAL</p>
 
-        <form onSubmit={handleLogin}>
+        <form onSubmit={handleLogin} style={{ width: '100%' }}>
           <input 
             type="text" placeholder="PIN NUMBER" 
             className="neon-input"

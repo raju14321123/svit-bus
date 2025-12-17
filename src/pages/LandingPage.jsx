@@ -20,22 +20,104 @@ const LandingPage = () => {
   }, []);
 
   return (
-    <div style={{ 
-      height: '100vh', 
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'center', 
-      justifyContent: 'center', 
-      background: 'radial-gradient(circle at center, #1e1b4b 0%, #020617 100%)', // Deep Navy Gradient
-      color: 'white',
-      fontFamily: 'Segoe UI, Roboto, sans-serif',
-      textAlign: 'center',
-      overflow: 'hidden',
-      position: 'relative'
-    }}>
+    <div className="landing-root">
       
+      <style>
+        {`
+          /* GLOBAL RESET TO PREVENT RIGHT-SIDE OVERFLOW */
+          * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+          }
+
+          .landing-root {
+            height: 100vh; 
+            width: 100vw;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            background: radial-gradient(circle at center, #1e1b4b 0%, #020617 100%);
+            color: white;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            text-align: center;
+            overflow: hidden;
+            position: relative;
+            padding: 20px; /* Safety padding for mobile */
+          }
+
+          @keyframes marquee {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-100%, 0); }
+          }
+
+          @keyframes boxGlow {
+            0%, 100% { border-color: #22d3ee; box-shadow: 0 0 15px #22d3ee; }
+            50% { border-color: #818cf8; box-shadow: 0 0 30px #818cf8; }
+          }
+
+          @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+          }
+
+          .neon-box {
+            animation: boxGlow 4s infinite ease-in-out;
+            width: 100%;
+            max-width: 360px; /* Limits size on desktop, scales on mobile */
+            margin: 0 auto;
+          }
+
+          .neon-text {
+            text-shadow: 0 0 10px #fff, 0 0 20px #22d3ee, 0 0 40px #22d3ee;
+            animation: float 5s infinite ease-in-out;
+          }
+
+          .neon-btn {
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: block;
+            width: 100%;
+          }
+
+          .neon-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px currentColor !important;
+            letter-spacing: 2px;
+          }
+
+          .neon-btn:active {
+            transform: scale(0.95);
+          }
+
+          /* MOBILE RATIO ADJUSTMENTS */
+          @media (max-width: 600px) {
+            .neon-text {
+              font-size: 3.5rem !important;
+              letter-spacing: 5px !important;
+            }
+            h2 {
+              font-size: 0.9rem !important;
+              letter-spacing: 2px !important;
+              margin-bottom: 20px;
+            }
+            .neon-box {
+              width: 95% !important; 
+              padding: 35px 20px !important;
+            }
+            footer {
+              font-size: 0.7rem !important;
+              bottom: 15px !important;
+            }
+            .marquee-container {
+              padding: 8px 0 !important;
+            }
+          }
+        `}
+      </style>
+
       {/* 1. NEON MARQUEE */}
-      <div style={{
+      <div className="marquee-container" style={{
         position: 'absolute',
         top: '0',
         width: '100%',
@@ -61,70 +143,8 @@ const LandingPage = () => {
         </div>
       </div>
 
-      <style>
-        {`
-          @keyframes marquee {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(-100%, 0); }
-          }
-
-          @keyframes boxGlow {
-            0%, 100% { border-color: #22d3ee; box-shadow: 0 0 15px #22d3ee; }
-            50% { border-color: #818cf8; box-shadow: 0 0 30px #818cf8; }
-          }
-
-          @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-          }
-
-          .neon-box {
-            animation: boxGlow 4s infinite ease-in-out;
-          }
-
-          .neon-text {
-            text-shadow: 0 0 10px #fff, 0 0 20px #22d3ee, 0 0 40px #22d3ee;
-            animation: float 5s infinite ease-in-out;
-          }
-
-          .neon-btn {
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-          }
-
-          .neon-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 40px currentColor !important;
-            letter-spacing: 2px;
-          }
-
-          .neon-btn:active {
-            transform: scale(0.95);
-          }
-
-          /* MOBILE RESPONSIVE FIX */
-          @media (max-width: 600px) {
-            .neon-text {
-              font-size: 3.5rem !important; /* Shrinks the SVIT logo for mobile */
-              letter-spacing: 5px !important;
-            }
-            h2 {
-              font-size: 0.9rem !important;
-              letter-spacing: 2px !important;
-            }
-            .neon-box {
-              width: 90% !important; /* Fits the box to phone width */
-              padding: 35px 20px !important;
-            }
-            footer {
-              font-size: 0.7rem !important;
-              bottom: 15px !important;
-            }
-          }
-        `}
-      </style>
-
       {/* 2. LOGO */}
-      <div style={{ marginBottom: '50px' }}>
+      <div style={{ marginBottom: '30px', width: '100%' }}>
         <h1 className="neon-text" style={{ fontSize: '5.5rem', margin: '0', letterSpacing: '10px', fontWeight: '900' }}>
           SVIT
         </h1>
@@ -140,7 +160,6 @@ const LandingPage = () => {
         borderRadius: '24px', 
         backdropFilter: 'blur(12px)',
         border: '2px solid #22d3ee',
-        width: '360px',
         position: 'relative'
       }}>
         <h3 style={{ marginBottom: '35px', color: '#fff', fontSize: '1.4rem', letterSpacing: '2px', fontWeight: '300' }}>SELECT PORTAL</h3>
@@ -173,7 +192,9 @@ const LandingPage = () => {
               borderRadius: '30px', 
               cursor: 'pointer', 
               fontSize: '0.75rem',
-              marginTop: '10px'
+              marginTop: '10px',
+              width: 'auto',
+              display: 'inline-block'
             }}
           >
             ADMINISTRATOR
@@ -181,7 +202,7 @@ const LandingPage = () => {
         </div>
       </div>
 
-      <footer style={{ position: 'absolute', bottom: '25px', fontSize: '0.8rem', color: 'rgba(129, 140, 248, 0.5)', letterSpacing: '1px' }}>
+      <footer style={{ position: 'absolute', bottom: '25px', fontSize: '0.8rem', color: 'rgba(129, 140, 248, 0.5)', letterSpacing: '1px', width: '100%' }}>
         SVIT INSTITUTE © 2025 | SECURE TRANSPORT
       </footer>
     </div>
@@ -202,8 +223,7 @@ const neonButtonStyle = (glowColor) => ({
   cursor: 'pointer',
   boxShadow: `0 0 10px ${glowColor}`,
   textShadow: `0 0 5px #fff`,
-  textTransform: 'uppercase',
-  display: 'block'
+  textTransform: 'uppercase'
 });
 
 export default LandingPage;

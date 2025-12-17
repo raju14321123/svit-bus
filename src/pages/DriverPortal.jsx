@@ -28,7 +28,6 @@ const DriverPortal = () => {
       sessionStorage.setItem('driverId', driverId);
       sessionStorage.setItem('mySessionId', newSessionId);
 
-      // Short delay to show the bus icon, then instant switch
       setTimeout(() => {
         navigate('/driver-panel'); 
       }, 800); 
@@ -40,50 +39,101 @@ const DriverPortal = () => {
   };
 
   return (
-    <div style={{ 
-      height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', 
-      background: 'radial-gradient(circle at center, #062006 0%, #020617 100%)',
-      fontFamily: 'Segoe UI, sans-serif'
-    }}>
+    <div className="driver-portal-wrapper">
       <style>
         {`
-          .login-card-base {
-            background: rgba(15, 23, 42, 0.85);
-            padding: 50px;
-            border-radius: 24px;
-            border: 2px solid #39FF14;
-            textAlign: center;
-            width: 360px;
-            box-shadow: 0 0 25px rgba(57, 255, 20, 0.2);
-          }
-          .green-neon-btn {
-            width: 100%; padding: 18px; border-radius: 12px;
-            background: transparent; border: 2px solid #39FF14;
-            color: #39FF14; font-weight: 900; cursor: pointer;
-            text-transform: uppercase; margin-top: 10px;
-            transition: 0.3s;
-          }
-          .green-neon-btn:hover { background: rgba(57, 255, 20, 0.1); }
-          .bus-anim { font-size: 2rem; display: block; animation: busSlide 0.5s forwards; }
-          @keyframes busSlide { from { transform: translateX(-100%); } to { transform: translateX(0); } }
-          
-          .neon-input {
-            width: 100%; padding: 15px; margin-bottom: 15px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(57, 255, 20, 0.3);
-            color: white; border-radius: 10px; text-align: center; outline: none;
+          /* GLOBAL RESET TO PREVENT OVERFLOW AND RIGHT-SHIFT */
+          * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
           }
 
-          /* MOBILE RESPONSIVE FIX */
+          .driver-portal-wrapper {
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, #062006 0%, #020617 100%);
+            font-family: 'Segoe UI', sans-serif;
+            overflow: hidden;
+            padding: 20px; /* Safety padding for mobile edges */
+          }
+
+          .login-card-base {
+            background: rgba(15, 23, 42, 0.85);
+            padding: 40px;
+            border-radius: 24px;
+            border: 2px solid #39FF14;
+            text-align: center;
+            width: 100%;
+            max-width: 360px; /* Professional size on desktop, scales down on mobile */
+            box-shadow: 0 0 25px rgba(57, 255, 20, 0.2);
+            margin: auto; /* Centers horizontally */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          }
+
+          .green-neon-btn {
+            width: 100%; 
+            padding: 16px; 
+            border-radius: 12px;
+            background: transparent; 
+            border: 2px solid #39FF14;
+            color: #39FF14; 
+            font-weight: 900; 
+            cursor: pointer;
+            text-transform: uppercase; 
+            margin-top: 10px;
+            transition: 0.3s;
+            display: block;
+            outline: none;
+          }
+
+          .green-neon-btn:hover { background: rgba(57, 255, 20, 0.1); }
+          
+          .bus-anim { 
+            font-size: 2rem; 
+            display: block; 
+            animation: busSlide 0.5s forwards; 
+          }
+
+          @keyframes busSlide { 
+            from { transform: translateX(-100%); opacity: 0; } 
+            to { transform: translateX(0); opacity: 1; } 
+          }
+          
+          .neon-input {
+            width: 100%; 
+            padding: 15px; 
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(57, 255, 20, 0.3);
+            color: white; 
+            border-radius: 10px; 
+            text-align: center; 
+            outline: none;
+            display: block;
+            transition: 0.3s;
+          }
+          
+          .neon-input:focus {
+            border-color: #39FF14;
+            box-shadow: 0 0 10px rgba(57, 255, 20, 0.3);
+          }
+
+          /* MOBILE RESPONSIVE ADAPTATION */
           @media (max-width: 480px) {
             .login-card-base {
-              width: 90% !important; /* Adjusts width to phone screen */
-              padding: 40px 20px !important; /* Reduces padding for smaller screens */
+              padding: 40px 20px;
+              width: 95%; /* Prevents touching the screen edges */
             }
-            h1 { font-size: 2.5rem !important; }
+            h1 { font-size: 2.2rem !important; }
             .neon-input, .green-neon-btn {
-              padding: 12px !important;
-              font-size: 0.9rem !important;
+              padding: 14px !important;
+              font-size: 0.85rem !important;
             }
           }
         `}
@@ -93,9 +143,23 @@ const DriverPortal = () => {
         <h1 style={{ color: '#fff', letterSpacing: '8px', textShadow: '0 0 15px #39FF14', margin: '0' }}>SVIT</h1>
         <p style={{ color: '#39FF14', fontSize: '0.8rem', marginBottom: '30px', letterSpacing: '2px' }}>DRIVER PORTAL</p>
 
-        <form onSubmit={handleLogin}>
-          <input type="text" placeholder="DRIVER ID" className="neon-input" value={driverId} onChange={e => setDriverId(e.target.value)} required />
-          <input type="password" placeholder="PASSWORD" className="neon-input" value={password} onChange={e => setPassword(e.target.value)} required />
+        <form onSubmit={handleLogin} style={{ width: '100%' }}>
+          <input 
+            type="text" 
+            placeholder="DRIVER ID" 
+            className="neon-input" 
+            value={driverId} 
+            onChange={e => setDriverId(e.target.value)} 
+            required 
+          />
+          <input 
+            type="password" 
+            placeholder="PASSWORD" 
+            className="neon-input" 
+            value={password} 
+            onChange={e => setPassword(e.target.value)} 
+            required 
+          />
 
           <button type="submit" className="green-neon-btn">
             {status === 'idle' ? "LOGIN" : <span className="bus-anim">🚌</span>}

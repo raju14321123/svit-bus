@@ -30,7 +30,7 @@ const AdminDash = () => {
   const [students, setStudents] = useState([]);
   const [drivers, setDrivers] = useState([]);
   const [showList, setShowList] = useState(false);
-  const [searchTerm, setSearchTerm] = useState(''); // New state for search
+  const [searchTerm, setSearchTerm] = useState(''); 
 
   useEffect(() => {
     if (isAdmin) {
@@ -57,7 +57,6 @@ const AdminDash = () => {
     setDrivers(dData || []);
   };
 
-  // Logic to filter users based on the search term
   const filteredStudents = students.filter(s => 
     s.student_id.toString().toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -142,38 +141,78 @@ const AdminDash = () => {
     return (
       <div className="login-wrapper">
         <style>{`
-          .login-wrapper {
-            height: 100vh; display: flex; align-items: center; justify-content: center; 
-            background: radial-gradient(circle at center, #020617 0%, #000 100%);
-            font-family: 'Segoe UI', sans-serif; overflow: hidden;
+          /* GLOBAL RESET TO PREVENT RIGHT DRIFT */
+          * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
           }
+          
+          .login-wrapper {
+            height: 100vh; 
+            width: 100vw;
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            background: radial-gradient(circle at center, #020617 0%, #000 100%);
+            font-family: 'Segoe UI', sans-serif; 
+            overflow: hidden;
+            padding: 20px;
+          }
+          
           @keyframes flyIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+          
           .admin-card { 
             background: rgba(10, 10, 20, 0.6); 
             backdrop-filter: blur(20px);
             border: 2px solid #00f2ff;
-            padding: 40px; border-radius: 30px; text-align: center; width: 380px; 
+            padding: 40px; 
+            border-radius: 30px; 
+            text-align: center; 
+            width: 100%;
+            max-width: 380px; /* Limits width on desktop, shrinks on mobile */
             box-shadow: 0 0 30px rgba(0, 242, 255, 0.2);
             animation: flyIn 0.8s ease-out forwards; 
+            margin: 0 auto; /* Centers horizontally */
           }
-          @media (max-width: 480px) { .admin-card { width: 90%; } }
+          
+          @media (max-width: 480px) { 
+            .admin-card { 
+                padding: 30px 20px; 
+                width: 95%; /* Ensures it doesn't touch edges */
+            } 
+            h1 { font-size: 2.2rem !important; }
+          }
+          
           .droplet-btn-red { 
             background: transparent; border: 2px solid #00f2ff; color: #00f2ff; 
-            padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; 
+            padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; 
+            width: 100%; 
             transition: 0.3s; text-transform: uppercase; letter-spacing: 2px;
+            margin-top: 10px;
           }
+          
           .droplet-btn-red:hover { background: #00f2ff; color: black; box-shadow: 0 0 20px #00f2ff; }
+          
           .neon-input-red { 
-            width: 100%; padding: 15px; margin-bottom: 20px; background: rgba(255, 255, 255, 0.05); 
-            border: 1px solid rgba(0, 242, 255, 0.3); color: white; border-radius: 12px; text-align: center; 
+            width: 100%; 
+            padding: 15px; 
+            margin-bottom: 20px; 
+            background: rgba(255, 255, 255, 0.05); 
+            border: 1px solid rgba(0, 242, 255, 0.3); 
+            color: white; 
+            border-radius: 12px; 
+            text-align: center; 
+            display: block;
+            outline: none;
           }
         `}</style>
         <div className="admin-card">
           <h1 style={{ color: '#fff', fontSize: '3rem', margin: 0, textShadow: '0 0 20px #00f2ff' }}>SVIT</h1>
           <p style={{ color: '#00f2ff', fontSize: '0.9rem', marginBottom: '30px', letterSpacing: '3px' }}>BUS TRACKING SYSTEM</p>
-          <div style={{ border: '1px solid rgba(0,242,255,0.3)', padding: '30px', borderRadius: '20px' }}>
-            <p style={{ color: '#ccc', marginBottom: '20px' }}>SELECT PORTAL</p>
-            <form onSubmit={handleAdminLogin}>
+          <div style={{ border: '1px solid rgba(0,242,255,0.3)', padding: '25px', borderRadius: '20px', width: '100%' }}>
+            <p style={{ color: '#ccc', marginBottom: '20px', fontSize: '0.8rem' }}>SELECT PORTAL</p>
+            <form onSubmit={handleAdminLogin} style={{ width: '100%' }}>
               <input type="password" placeholder="ADMIN ACCESS KEY" className="neon-input-red" value={adminPasswordInput} onChange={(e) => setAdminPasswordInput(e.target.value)} required />
               <button type="submit" className="droplet-btn-red">{isLoggingIn ? "SYNCING..." : "AUTHORIZE"}</button>
             </form>
@@ -186,10 +225,13 @@ const AdminDash = () => {
   return (
     <div className="admin-dashboard-root">
        <style>{`
+          * { box-sizing: border-box; }
           .admin-dashboard-root {
             padding: 20px; 
             background: #020617; 
             minHeight: 100vh; color: white; font-family: 'Segoe UI', sans-serif;
+            width: 100vw;
+            overflow-x: hidden;
           }
           .admin-grid {
             display: grid;
@@ -201,6 +243,7 @@ const AdminDash = () => {
           @media (max-width: 850px) {
             .admin-grid { grid-template-columns: 1fr; }
             .neon-text-green { font-size: 1.2rem !important; }
+            .admin-dashboard-root { padding: 10px; }
           }
           
           .water-glass {
@@ -209,6 +252,7 @@ const AdminDash = () => {
             border-radius: 20px;
             padding: 25px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 100%;
           }
           
           .neon-text-green { color: #39FF14; text-shadow: 0 0 10px rgba(57, 255, 20, 0.5); font-size: 1.5rem; margin-bottom: 20px; }
@@ -217,8 +261,10 @@ const AdminDash = () => {
           .action-btn-green { 
             background: transparent; border: 1px solid #39FF14; color: #39FF14; 
             padding: 12px 20px; border-radius: 10px; cursor: pointer; transition: 0.3s;
-            font-weight: bold; width: fit-content; margin-top: 5px;
+            font-weight: bold; width: 100%; margin-top: 5px;
           }
+          @media (min-width: 851px) { .action-btn-green { width: fit-content; } }
+          
           .action-btn-green:hover { background: #39FF14; color: black; box-shadow: 0 0 15px #39FF14; }
 
           .action-btn-yellow { 
@@ -231,6 +277,7 @@ const AdminDash = () => {
           .neon-input-dash { 
             padding: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); 
             color: white; border-radius: 10px; width: 100%; margin-bottom: 15px; outline: none;
+            display: block;
           }
           .neon-input-dash:focus { border-color: #39FF14; background: rgba(57, 255, 20, 0.05); }
 
@@ -289,7 +336,6 @@ const AdminDash = () => {
 
             {showList && (
               <div className="water-glass" style={{ marginTop: '20px', maxHeight: '500px', overflowY: 'auto', border: '1px solid #00f2ff' }}>
-                 {/* SEARCH BAR COMPONENT */}
                  <input 
                    placeholder="🔍 Quick Search ID..." 
                    value={searchTerm} 
