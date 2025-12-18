@@ -16,7 +16,8 @@ const busIcon3D = L.icon({
 function MapFocus({ target }) {
   const map = useMap();
   useEffect(() => {
-    if (target && target.lat && target.lng) {
+    // Corrected: Only focus if the bus is active and coordinates exist
+    if (target && target.is_active && target.lat && target.lng) {
       map.setView([target.lat, target.lng], 16);
     }
   }, [target, map]);
@@ -38,14 +39,23 @@ const StudentDash = () => {
     };
     fetchData();
 
+    // Corrected: Listening for real-time updates on all buses
     const channel = supabase.channel('bus-updates').on('postgres_changes', { 
       event: 'UPDATE', schema: 'public', table: 'buses' 
     }, (payload) => {
-      setBuses((prev) => prev.map(b => b.bus_number === payload.new.bus_number ? payload.new : b));
+      setBuses((prev) => {
+        const updatedBuses = prev.map(b => b.bus_number === payload.new.bus_number ? payload.new : b);
+        
+        // If the updated bus is the one currently selected, sync it immediately
+        if (selectedBus && selectedBus.bus_number === payload.new.bus_number) {
+            setSelectedBus(payload.new);
+        }
+        return updatedBuses;
+      });
     }).subscribe();
 
     return () => supabase.removeChannel(channel);
-  }, []);
+  }, [selectedBus]); // Added selectedBus as dependency to keep tracking in sync
 
   return (
     <div className="dash-root" style={{ 
@@ -197,9 +207,15 @@ const StudentDash = () => {
           <MapContainer center={[15.8281, 78.0373]} zoom={13} style={{ height: '100%', width: '100%', borderRadius: '15px' }}>
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
             {buses.map(bus => (
-              bus.lat !== 0 && (
+              // Corrected: Only show markers for buses that are active and have coordinates
+              bus.is_active && bus.lat !== 0 && (
                 <Marker key={bus.id} position={[bus.lat, bus.lng]} icon={busIcon3D}>
-                  <Popup><strong>SVIT BUS {bus.bus_number}</strong></Popup>
+                  <Popup>
+                    <div style={{ color: '#000' }}>
+                      <strong>SVIT BUS {bus.bus_number}</strong>
+                      <p style={{ margin: '5px 0 0' }}>Status: Live Tracking</p>
+                    </div>
+                  </Popup>
                 </Marker>
               )
             ))}
