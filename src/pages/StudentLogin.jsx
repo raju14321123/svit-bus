@@ -124,6 +124,19 @@ const StudentLogin = () => {
             text-align: center; outline: none; transition: 0.3s;
           }
           .neon-input:focus { border-color: #22d3ee; box-shadow: 0 0 15px #22d3ee; }
+
+          /* MOBILE RESPONSIVE FIX */
+          @media (max-width: 480px) {
+            .login-card-base {
+              width: 90% !important; /* Adjusts width to phone screen */
+              padding: 40px 20px !important; /* Reduces padding for smaller screens */
+            }
+            h1 { font-size: 2.5rem !important; }
+            .neon-input, .droplet-btn {
+              padding: 12px !important;
+              font-size: 0.9rem !important;
+            }
+          }
         `}
       </style>
 

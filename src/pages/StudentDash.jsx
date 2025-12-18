@@ -54,7 +54,7 @@ const StudentDash = () => {
       background: 'radial-gradient(circle at center, #0f172a 0%, #020617 100%)', 
       minHeight: '100vh',
       color: 'white',
-      overflow: 'hidden'
+      overflowX: 'hidden'
     }}>
       
       <style>
@@ -101,7 +101,6 @@ const StudentDash = () => {
             box-shadow: 0 4px 15px rgba(250, 204, 21, 0.3);
           }
 
-          /* CLICK RIPPLE ELEMENT */
           .move-btn-yellow::after {
             content: "";
             position: absolute;
@@ -137,6 +136,27 @@ const StudentDash = () => {
 
           ::-webkit-scrollbar { width: 6px; }
           ::-webkit-scrollbar-thumb { background: #facc15; border-radius: 10px; }
+
+          /* MOBILE RESPONSIVE ADAPTATION */
+          @media (max-width: 900px) {
+            .dash-root { padding: 10px !important; overflow-y: auto !important; overflow-x: hidden !important; }
+            header { padding: 10px 20px !important; margin-bottom: 10px !important; flex-direction: column; text-align: center; gap: 10px; }
+            h1 { font-size: 1.4rem !important; }
+            
+            .main-layout-grid { 
+              display: flex !important; 
+              flex-direction: column !important; 
+              height: auto !important; 
+              gap: 15px !important;
+            }
+
+            .neon-card { width: 100% !important; height: auto !important; min-height: 200px; max-height: 500px; }
+            .leaflet-container { height: 400px !important; border-radius: 15px !important; }
+            
+            /* Make buttons easier to tap on mobile */
+            .move-btn-yellow { padding: 18px !important; margin-bottom: 10px !important; }
+            .move-btn-yellow:hover { transform: scale(1.01); }
+          }
         `}
       </style>
 
@@ -155,7 +175,7 @@ const StudentDash = () => {
         </button>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr 320px', gap: '20px', height: '78vh' }}>
+      <div className="main-layout-grid" style={{ display: 'grid', gridTemplateColumns: '300px 1fr 320px', gap: '20px', height: '78vh' }}>
         
         <div className="neon-card" style={{ padding: '20px', overflowY: 'auto' }}>
           <h3 style={{ color: '#facc15', textShadow: '0 0 10px rgba(250, 204, 21, 0.5)', marginBottom: '20px', letterSpacing: '2px' }}>SELECT BUS</h3>

@@ -120,6 +120,11 @@ const AdminDash = () => {
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
             animation: flyIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
           }
+          /* MOBILE LOGIN FIX */
+          @media (max-width: 480px) {
+            .admin-card { width: 90%; padding: 30px 20px; }
+            h1 { font-size: 2.5rem !important; }
+          }
           .droplet-btn-red { position: relative; overflow: hidden; background: transparent; border: 2px solid #ef4444; color: #ef4444; padding: 18px; border-radius: 12px; font-weight: 900; cursor: pointer; width: 100%; margin-top: 10px; }
           @keyframes busEnter { from { transform: translateX(-150%); } to { transform: translateX(0%); } }
           .bus-anim { animation: busEnter 0.5s forwards; font-size: 2rem; display: block; }
@@ -171,6 +176,19 @@ const AdminDash = () => {
           .action-btn-green:hover { background: #39FF14; color: #020617; box-shadow: 0 0 20px #39FF14; }
           .neon-input-dash { padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 10px; width: 100%; margin-bottom: 12px; outline: none; }
           .neon-input-dash:focus { border-color: #39FF14; }
+
+          /* MOBILE RESPONSIVE FIX */
+          @media (max-width: 768px) {
+            body { overflow-x: hidden; }
+            div[style*="padding: 30px"] { padding: 15px !important; }
+            header { flex-direction: column; gap: 15px; text-align: center; }
+            h1 { font-size: 1.5rem !important; }
+            div[style*="gridTemplateColumns: 1.2fr 1fr"] { 
+              grid-template-columns: 1fr !important; 
+              gap: 10px !important; 
+            }
+            .water-glass { padding: 20px 15px; }
+          }
        `}</style>
 
        <header className="panel-entrance" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>

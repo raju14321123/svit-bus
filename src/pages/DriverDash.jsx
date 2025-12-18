@@ -16,7 +16,26 @@ const DriverDash = () => {
       height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', 
       background: '#020617', color: 'white', fontFamily: 'Segoe UI, sans-serif' 
     }}>
-      <div style={{
+      <style>
+        {`
+          /* MOBILE RESPONSIVE FIX */
+          @media (max-width: 500px) {
+            .driver-card-container {
+              width: 90% !important; /* Fits the card to phone width */
+              padding: 30px 20px !important; /* Adjusts internal spacing */
+            }
+            h1 {
+              font-size: 1.5rem !important; /* Reduces title size for small screens */
+            }
+            input, button {
+              padding: 12px !important; /* Makes inputs easier to tap */
+              font-size: 0.9rem !important;
+            }
+          }
+        `}
+      </style>
+
+      <div className="driver-card-container" style={{
         padding: '50px', borderRadius: '30px', border: '2px solid #39FF14',
         background: 'rgba(15, 23, 42, 0.8)', textAlign: 'center', width: '400px',
         boxShadow: '0 0 20px rgba(57, 255, 20, 0.1)'

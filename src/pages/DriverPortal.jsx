@@ -73,6 +73,19 @@ const DriverPortal = () => {
             border: 1px solid rgba(57, 255, 20, 0.3);
             color: white; border-radius: 10px; text-align: center; outline: none;
           }
+
+          /* MOBILE RESPONSIVE FIX */
+          @media (max-width: 480px) {
+            .login-card-base {
+              width: 90% !important; /* Adjusts width to phone screen */
+              padding: 40px 20px !important; /* Reduces padding for smaller screens */
+            }
+            h1 { font-size: 2.5rem !important; }
+            .neon-input, .green-neon-btn {
+              padding: 12px !important;
+              font-size: 0.9rem !important;
+            }
+          }
         `}
       </style>
 

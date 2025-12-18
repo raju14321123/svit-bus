@@ -100,6 +100,26 @@ const LandingPage = () => {
           .neon-btn:active {
             transform: scale(0.95);
           }
+
+          /* MOBILE RESPONSIVE FIX */
+          @media (max-width: 600px) {
+            .neon-text {
+              font-size: 3.5rem !important; /* Shrinks the SVIT logo for mobile */
+              letter-spacing: 5px !important;
+            }
+            h2 {
+              font-size: 0.9rem !important;
+              letter-spacing: 2px !important;
+            }
+            .neon-box {
+              width: 90% !important; /* Fits the box to phone width */
+              padding: 35px 20px !important;
+            }
+            footer {
+              font-size: 0.7rem !important;
+              bottom: 15px !important;
+            }
+          }
         `}
       </style>
 
