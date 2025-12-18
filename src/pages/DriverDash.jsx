@@ -12,6 +12,32 @@ const DriverDash = () => {
     if (!user) navigate('/driver');
   }, [navigate]);
 
+  // --- SCREEN WAKE LOCK LOGIC ---
+  useEffect(() => {
+    let wakeLock = null;
+
+    const requestWakeLock = async () => {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await navigator.wakeLock.request('screen');
+        }
+      } catch (err) {
+        console.error(`${err.name}, ${err.message}`);
+      }
+    };
+
+    if (isSharing) {
+      requestWakeLock();
+    } else {
+      if (wakeLock) wakeLock.release().then(() => { wakeLock = null; });
+    }
+
+    return () => {
+      if (wakeLock) wakeLock.release();
+    };
+  }, [isSharing]);
+
+  // --- LIVE GPS TRACKING LOGIC ---
   useEffect(() => {
     let watchId;
 
@@ -35,13 +61,13 @@ const DriverDash = () => {
     };
 
     if (isSharing && busNumber) {
-      // MODIFIED: Increased timeout and allowed lower accuracy fallback to prevent "Timeout expired"
+      if (watchId) navigator.geolocation.clearWatch(watchId);
+
       watchId = navigator.geolocation.watchPosition(
         (position) => {
           sendToDatabase(position.coords.latitude, position.coords.longitude);
         },
         (err) => {
-          // If it's just a timeout, we log it but don't stop the sharing
           if (err.code === 3) {
             console.warn("GPS Timeout: Signal is weak, still trying...");
           } else {
@@ -50,9 +76,9 @@ const DriverDash = () => {
           }
         },
         { 
-          enableHighAccuracy: false, // Set to false to get signal faster indoors
-          maximumAge: 0,         // Use location from last 30 seconds
-          timeout: 10000             // Wait 15 seconds before timing out
+          enableHighAccuracy: true, 
+          maximumAge: 0,           
+          timeout: 10000            
         }
       );
     } else if (!isSharing && busNumber) {
@@ -89,7 +115,8 @@ const DriverDash = () => {
             <div style={{ fontSize: '3rem' }}>📡</div>
             <h2 style={{ color: '#39FF14' }}>SHARING ACTIVE</h2>
             <p>Bus {busNumber} is Live</p>
-            <button onClick={() => setIsSharing(false)} style={{ padding: '10px 25px', background: 'transparent', border: '1px solid #ef4444', color: '#ef4444', borderRadius: '8px', cursor: 'pointer' }}>STOP SHARING</button>
+            <p style={{ fontSize: '0.7rem', color: '#39FF14', marginTop: '10px' }}>Keep this tab open for live tracking</p>
+            <button onClick={() => setIsSharing(false)} style={{ padding: '10px 25px', background: 'transparent', border: '1px solid #ef4444', color: '#ef4444', borderRadius: '8px', cursor: 'pointer', marginTop: '15px' }}>STOP SHARING</button>
           </div>
         )}
       </div>
